@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -28,11 +31,12 @@ public class Product implements Serializable {
 	private String imgUrl;
 	
 	@ManyToMany
-	@JoinTable(name = "tb_product_category", 
-	joinColumns = @JoinColumn(name = "product_id"), 
-	inverseJoinColumns = @JoinColumn(name = "category_id"))
+	@JoinTable(name = "tb_product_category", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
 	private Set<Category> categories = new HashSet<>();					//nesse exemplo em especifico usasse o set para garantir que nao tera um produto com a mesma categoria mais de uma vez
 																		//Um produto tem varias categorias
+	@OneToMany(mappedBy = "id.product")
+	private Set<OrderItem> items = new HashSet<>();																//uso de set para nao admitir que possua repetições do mesmo item
+	
 	public Product() {
 	}
 
@@ -87,6 +91,15 @@ public class Product implements Serializable {
 
 	public Set<Category> getCategories() {
 		return categories;
+	}
+	
+	@JsonIgnore
+	public Set<Order> getOrder() {				//percorre a coleção item, e para cada elemento da coleção adicionar o order
+		Set<Order> set = new HashSet<>();
+		for (OrderItem x : items) {
+			set.add(x.getOrder());
+		}
+		return set;
 	}
 	
 	@Override
